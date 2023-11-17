@@ -52,17 +52,14 @@ def check_vstlist(l):
     
     #пустить проверки по словарям
     report = ''
-    report += 'C:ok;' if dfx['C'].apply(lambda x: x in dcol_em_sto).all() \
-                      else f"C:error;"
-    report+='Q:ok;' if dfx['Q'].apply(lambda x: x in dcla_em_sto).all()\
-                      else 'Q:error;'
-    report+='PCS:ok;' if dfx['PCS'].apply(lambda x: x!='').all()\
-                      else 'PCS:error;'
-    #если есть хоть одна ошибка не считать! 
-    
+    report += 'C ok;' if dfx['C'].apply(lambda x: x in dcol_em_sto).all() \
+                      else 'C error;'
+    report+='Q ok;' if dfx['Q'].apply(lambda x: x in dcla_em_sto).all()\
+                      else 'Q error;'
+    report+='PCS ok;' if dfx['PCS'].apply(lambda x: x!='').all()\
+                      else 'PCS error;'
+    #масса за камень
     try:
-        if report.__contains__('error'):
-            raise ValueError("имеется ошибка")
         dfx['PCS'] = dfx['PCS'].astype('int')
         dfx['CARAT'] = dfx['CARAT'].str.replace(',','.').astype('float')
         dfx['PCS'] = dfx['PCS'].astype('int')
@@ -79,6 +76,5 @@ def check_vstlist(l):
     except:
         return 'except; '+report
 
-    return f"prcost:{dfx['prcost'].sum():,.2f}$; CARAT:{dfx['CARAT'].sum():,.2f}; \
- size:{((dfx['size']+'+').sum()).strip('+')}; price:{((dfx['price'].astype('str')+'+').sum()).strip('+')}; "+report
-    #return dfx['CARAT'].sum(),dfx['prcost'].sum(),(dfx['price'].astype('str')+'-').sum(),list(dfx['size']),report
+    
+    return dfx['CARAT'].sum(),dfx['prcost'].sum(),(dfx['price'].astype('str')+'-').sum(),list(dfx['size']),report
