@@ -3,7 +3,7 @@ import pandas as pd
 import re
 import os
 import importlib
-from module_prgem.dictemeralds import dcla_em_sto, dcol_em_sto
+from module_prgem.dictemsapruby import dcla_em_sto, dcol_em_sto, dcla_sap, dcol_sap
 
 #Globals
 #загрузка таблицы определения размерностей для изумрудов сто кабашон и фацет
@@ -77,8 +77,8 @@ def check_vstlist(l):
         dfx['prcost'] = dfx['CARAT']*dfx['price']
 
     except:
-        return 'except; '+report
+        return '0;0;except; '+report
 
-    return f"prcost:{dfx['prcost'].sum():,.2f}$; CARAT:{dfx['CARAT'].sum():,.2f}; \
+    return f"{dfx['prcost'].sum():,.2f};{dfx['CARAT'].sum():,.3f};Ok; \
  size:{((dfx['size']+'+').sum()).strip('+')}; price:{((dfx['price'].astype('str')+'+').sum()).strip('+')}; "+report
     #return dfx['CARAT'].sum(),dfx['prcost'].sum(),(dfx['price'].astype('str')+'-').sum(),list(dfx['size']),report
