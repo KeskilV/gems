@@ -15,12 +15,11 @@ df_pr_sapruby = pd.read_excel('module_prgem/df_pr_sap_ruby_ 64_65_13-02-2020.xls
                           dtype={'цвет':'str', 'чистота':'str'})
 
 def size_sap_ruby(carat_1):
-    '''функция для определения размерной группы сапфира и рубина в зависимоти кабашон или фацет огранка
-       , carat_1'''   
+    '''функция для определения размерной группы сапфира и рубина, carat_1'''   
     return df_sizes_sap_ruby[(df_sizes_sap_ruby.low_grade<=carat_1)].sort_values('low_grade').iloc[-1,0]
 
 def make_list_sap(t):
-    #последний рабочий pattern_sap3_
+    #последний рабочий pattern_sap
     pattern_sap =  r"""(?ix)(?P<N>\d{,3})# штуки 
                (?P<Gem>сапфир[A-яA-z.]{0,5})[-]+  #gem
                (?P<Carat>\d\d?[.,]?\d*)[\s-]+                                 # карат
@@ -29,6 +28,7 @@ def make_list_sap(t):
 
     # чисто для сапфирП и Н
     pattern_jsap = r"""(?ix)(?P<Gem>сапфир[пПнНhH][^вВbB])+#gem"""
+    
     def vst2listsap(t):
         '''функцая распозавания сапфиров вывод если нет то nan'''
         res = re.findall(pattern_sap, t )
@@ -40,7 +40,9 @@ def make_list_sap(t):
         return res #not na -> if len(res)!=0 else np.nan 
 
     def error_by_lens_patts(t):
-        '''функцая обнаружения ошибок при re распозаваниb сапфиров'''
+        '''функцая обнаружения ошибок при re распозаваниb сапфиров
+        сопоставляет количество пойманных чисто для  # чисто для сапфирП и Н и 
+        #последний рабочий pattern_sap'''
 
         len_p = len(re.findall(pattern_sap, t ))
         len_j = len(re.findall(pattern_jsap, t ))
@@ -48,7 +50,7 @@ def make_list_sap(t):
 
     
     def check_vstlistsapryby(l):
-        '''функция для вывода стандартного листа и отчет проверки соответствия словарям по flagreport=True'''                           
+        '''функция для вывода стандартного листа и отчет проверки соответствия словарям '''                           
         #проверка на пусто или []
         if l is np.nan or len(l)==0:
             return 'нет распознанных'
@@ -75,7 +77,9 @@ def make_list_sap(t):
         return report 
 
     def sap_list2std(l):
-        '''функция для вывода стандартного листа и отчет проверки соответствия словарям по flagreport=True'''                           
+        '''функция для вывода стандартного листа и отчет проверки соответствия словарям 
+        на выходе кортеж 0 - лист со стандартизированными форма, цв, кач ['PCS', 'GEM', 'CARAT', 'FORM', 'C', 'Q',  'C_add']
+        1- отчет '''                           
         #проверка на пусто или []
         if l is np.nan or len(l)==0:
             return [],'нет распознанных'
@@ -113,35 +117,56 @@ def make_list_sap(t):
     std_list = res[0]
     
       
-    return res[0],res[1]
+    return res[0],report
     
-
-
-
-
-
-
-'''    
+def count_price(stdl):
+    #создать внутренний dfx
+    dfx = pd.DataFrame({'vstlist':stdl})
+    cols = ['PCS', 'GEM', 'CARAT', 'FORM', 'C', 'Q']
     try:
-        if report.__contains__('error'):g
-            raise ValueError("имеется ошибка")
-        dfx['PCS'] = dfx['PCS'].astype('int')
+        for c in range(len(cols)):
+            dfx[cols[c]] = dfx.vstlist.apply(lambda x: x[c].lower().strip())
+    
+    
+        
+       # if stdl.__contains__('NaN'):
+       #     raise ValueError("имеется ошибка")
+         
         dfx['CARAT'] = dfx['CARAT'].str.replace(',','.').astype('float')
         dfx['PCS'] = dfx['PCS'].astype('int')
-        dfx['C'] = dfx['C'].map(dcol_em_sto)
-        dfx['Q'] = dfx['Q'].map(dcla_em_sto)
-        dfx['CARAT_1'] = dfx['CARAT']/dfx['PCS']
-        dfx['size'] = dfx.apply(lambda x:size_em_sto(x['Q'],x['CARAT_1']),axis=1)
-        dfx = pd.merge(left=dfx, right=pr_em_sto,
+        dfx['C'] = dfx['C'].map(mds.dcol_sap)
+        dfx['Q'] = dfx['Q'].map(mds.dcla_sap)
+        dfx['GEM'] = dfx['GEM'].map(mds.dgem)
+        dfx['CARAT_1'] = dfx[['CARAT','PCS']].apply(lambda x: round(x['CARAT']/x['PCS'],3) , axis=1)
+        dfx['size'] = dfx['CARAT_1'].apply(lambda x:size_sap_ruby(x)) 
+        df_pr_sapruby['GEM'] = df_pr_sapruby['gemstone'].str.lower().map(mds.dgem)
+        df_pr_sapruby['C'] = df_pr_sapruby['цвет'].str.lower().map(mds.dcol_sap)
+        df_pr_sapruby['Q'] = df_pr_sapruby['чистота'].str.lower().map(mds.dcla_sap)
+        
+        dfxm = pd.merge(left=dfx, right=df_pr_sapruby[['size', 'price','GEM', 'C', 'Q']],
             how='left', 
-            left_on=['size', 'C', 'Q',],
-            right_on=['size','цвет', 'чистота'])
-        dfx['prcost'] = dfx['CARAT']*dfx['price']
+            left_on=['GEM','size', 'C', 'Q'],
+            right_on=['GEM','size', 'C', 'Q'])
+        dfxm['prcost'] = dfxm['CARAT']*dfxm['price']
+        #Проверка сработки и правильности
+        if len(dfxm)!=len(dfx):
+            return 'ошибка мерже'
+        elif any(dfxm['price'].isna()):
+            return 'не сработал'
+        elif len(df_pr_sapruby[['GEM','size', 'C', 'Q']].sum(axis=1).unique())!= len(df_pr_sapruby):
+            return 'ошибка прейск'    
+            
+ 
 
     except:
-        return '0;0;except; '+report
-
-    return f"{dfx['prcost'].sum():,.2f};{dfx['CARAT'].sum():,.3f};Ok; \
- size:{((dfx['size']+'+').sum()).strip('+')}; price:{((dfx['price'].astype('str')+'+').sum()).strip('+')}; "+report
+        return 'error '
+    return f"{dfxm['prcost'].sum():,.2f}; {((dfxm['CARAT'].astype('str')+'+').sum()).strip('+')}; \
+price:{((dfxm['price'].astype('str')+'+').sum()).strip('+')}; size:{((dfxm['size']+'+').sum()).strip('+')}"   
+   # return f"{dfxm['prcost'].sum():,.2f}; carat = {dfxm['CARAT'].sum():,.3f}" 
+    
+    
+ 
+    
+#    return f";{dfx['CARAT'].sum():,.3f};Ok; \
+# size:{((dfx['size']+'+').sum()).strip('+')}; price:{((dfx['price'].astype('str')+'+').sum()).strip('+')}; "+report
     #return dfx['CARAT'].sum(),dfx['prcost'].sum(),(dfx['price'].astype('str')+'-').sum(),list(dfx['size']),report
-'''
