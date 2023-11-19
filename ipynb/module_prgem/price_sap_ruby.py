@@ -111,7 +111,7 @@ def make_list_sap(t):
 
     report = error_by_lens_patts(t)
     rawlist = vst2listsap_notna(t)
-    #готовим вывот стандартного листа вставок
+    #готовим вывод стандартного листа вставок
     res = sap_list2std(rawlist)
     report += ';'+res[1]
     std_list = res[0]
