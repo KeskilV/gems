@@ -3,8 +3,9 @@ import pandas as pd
 import re
 import os
 import importlib
-from module_prgem.dictemsapruby import dcla_em_sto, dcol_em_sto, dcla_sap, dcol_sap
-
+#from module_prgem.dictemsapruby import dcla_em_sto, dcol_em_sto, dcla_sap, dcol_sap
+from module_prgem.dictgems import dcla_em_sto, dcol_em_sto, dcla_sap, dcol_sap
+import module_prgem.dictgems as mds
 #Globals
 #загрузка таблицы определения размерностей для изумрудов сто кабашон и фацет
 sizes_g = pd.read_excel('module_prgem/size_em_sto.xlsx') 
@@ -20,8 +21,7 @@ def vst2list(t):
                (?P<Form>[A-яA-z.\d-]{1,10})[+]+#[+\s-]+ 
                (?P<ColQ>\d+[ /]+(?:\d*[ГгКкKk]*\d*))"""
     res = re.findall(pattern_em, t )
-    return res if len(res)!=0 else np.nan 
-
+    return res if len(res)!=0 else [] #danger np.nan
 
 def size_em_sto(q,carat_1):
     '''функция для определения размерной группы изумруда по сто в зависимоти кабашон или фацет огранка
@@ -40,7 +40,7 @@ def check_vstlist(l):
     '''функция для проверки соответствия словарям'''                           
     #проверка на пусто или []
     if l is np.nan or len(l)==0:
-        return np.nan
+        return []
     #создать внутренний dfx
     dfx = pd.DataFrame({'vstlist':l})
     cols = ["PCS","GEM","CARAT", "FORM", "CQ"]
@@ -79,6 +79,69 @@ def check_vstlist(l):
     except:
         return '0;0;except; '+report
 
+    return f"{dfx['prcost'].sum():.2f}; {((dfx['CARAT'].astype('str')+'+').sum()).strip('+')}; \
+price:{((dfx['price'].astype('str')+'+').sum()).strip('+')};\
+size:{((dfx['size']+'+').sum()).strip('+')};\
+gem:{((dfx['GEM'].astype('str')+'+').sum()).strip('+')}"   
+    
+''' работала    
     return f"{dfx['prcost'].sum():,.2f};{dfx['CARAT'].sum():,.3f};Ok; \
  size:{((dfx['size']+'+').sum()).strip('+')}; price:{((dfx['price'].astype('str')+'+').sum()).strip('+')}; "+report
     #return dfx['CARAT'].sum(),dfx['prcost'].sum(),(dfx['price'].astype('str')+'-').sum(),list(dfx['size']),report
+    '''
+def list2std_em_sap_ruby(l):
+    '''функция для вывода стандартного листа и отчет проверки соответствия словарям 
+        на выходе кортеж 0 - лист со стандартизированными форма, цв, кач ['PCS', 'GEM', 'CARAT', 'FORM', 'C', 'Q',  'C_add']
+        1- отчет '''                           
+    
+    def report_sap_ruby():
+        #пустить проверки по словарям  dcla_sap, dcol_sap, dgem
+        report = ''
+        report+='C:ok;' if dfx['C'].apply(lambda x: x in mds.dcol_sap).all() \
+                          else f"C:error:{' '.join(dfx.loc[~dfx['C'].apply(lambda x: x in mds.dcol_sap), 'C'].to_list())};"
+        report+='Q:ok;' if dfx['Q'].apply(lambda x: x in mds.dcla_sap).all()\
+                          else f"Q:error:{' '.join(dfx.loc[~dfx['Q'].apply(lambda x: x in mds.dcla_sap), 'Q'].to_list())};"
+        report+='PCS:ok;' if dfx['PCS'].apply(lambda x: x!='').all()\
+                          else 'PCS:error:'';'
+        report += 'GEM:ok;' if dfx['GEM'].apply(lambda x: x in mds.dgem).all() \
+                          else f"GEM:error:{' '.join(dfx.loc[~dfx['GEM'].apply(lambda x: x in mds.dgem), 'GEM'].to_list())};"
+        return report
+    
+    def report_em():
+        #пустить проверки по словарям  dcla_sap, dcol_sap, dgem
+        report = ''
+        report+='C:ok;' if dfx['C'].apply(lambda x: x in mds.dcol_em_sto).all() \
+                          else f"C:error:{' '.join(dfx.loc[~dfx['C'].apply(lambda x: x in mds.dcol_em_sto), 'C'].to_list())};"
+        report+='Q:ok;' if dfx['Q'].apply(lambda x: x in mds.dcla_em_sto).all()\
+                          else f"Q:error:{' '.join(dfx.loc[~dfx['Q'].apply(lambda x: x in mds.dcla_em_sto), 'Q'].to_list())};"
+        report+='PCS:ok;' if dfx['PCS'].apply(lambda x: x!='').all()\
+                          else 'PCS:error:'';'
+        report += 'GEM:ok;' if dfx['GEM'].apply(lambda x: x in mds.dgem).all() \
+                          else f"GEM:error:{' '.join(dfx.loc[~dfx['GEM'].apply(lambda x: x in mds.dgem), 'GEM'].to_list())};"
+        return report
+    
+    #проверка на пусто или []
+    if l is np.nan or len(l)==0:
+            return [],'нет распознанных'
+        #создать внутренний dfx
+    dfx = pd.DataFrame({'vstlist':l})
+    cols = ["PCS","GEM","CARAT", "FORM", "CQ"]
+    for c in range(len(cols)):
+        dfx[cols[c]] = dfx.vstlist.apply(lambda x: x[c].lower().strip())
+    dfx['C'] = dfx['CQ'].apply(lambda x: x.split('/')[0].lower().strip())
+    dfx['Q'] = dfx['CQ'].apply(lambda x: x.split('/')[1].lower().strip().split('*')[0].strip())
+    dfx['C_add'] = dfx['CQ'].apply(lambda x: x.split('/')[1].lower().strip().split('*')[-1].strip()\
+                                  if x.__contains__('*') else np.nan)
+
+    dfx['GEM_s'] = dfx['GEM'].map(mds.dgem)
+    
+    if dfx['GEM_s'].unique()[0] == 'изумрудпм':
+        dfx['C_s'] = dfx['C'].map(mds.dcol_em_sto)
+        dfx['Q_s'] = dfx['Q'].map(mds.dcla_em_sto)
+    else:
+        dfx['C_s'] = dfx['C'].map(mds.dcol_sap)
+        dfx['Q_s'] = dfx['Q'].map(mds.dcla_sap)
+   
+    std_list = dfx[['PCS', 'GEM_s', 'CARAT', 'FORM', 'C_s', 'Q_s', 'C_add']].to_numpy().tolist()
+    return std_list, report_em() if dfx['GEM_s'].unique()[0] == 'изумрудпм' else report_sap_ruby()
+
