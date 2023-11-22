@@ -116,7 +116,7 @@ def make_list_ruby(t):
     std_list = res[0]
     return res[0],report
 
-    
+'''   устарел? 
 def count_price(stdl):
     #создать внутренний dfx
     dfx = pd.DataFrame({'vstlist':stdl})
@@ -160,7 +160,7 @@ def count_price(stdl):
 price:{((dfxm['price'].astype('str')+'+').sum()).strip('+')};\
 size:{((dfxm['size']+'+').sum()).strip('+')};\
 gem:{((dfxm['GEM'].astype('str')+'+').sum()).strip('+')}"   
-   
+'''   
 def count_price_report(list_report):
     '''на входе (sdantart list, report)'''
     if list_report[1].__contains__('err'):

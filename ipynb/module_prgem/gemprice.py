@@ -83,5 +83,6 @@ def gemprice(df_orig, colname_vst):
     #суммирование репортов всех ДК
     df['report_sum'] = df[['report_ruby20','report_sap20','report_em20' ]]\
     .apply(lambda x: f"r:{x['report_ruby20']}; s:{x['report_sap20']}; e:{x['report_em20']}", axis=1)
-    print(df.loc[df.sum_pr2.apply(lambda x: type(x)!=type('s')),['sum_pr2']].sum())
+    print("сумма стоимости дк ", df.loc[df.sum_pr2.apply(lambda x: type(x)!=type('s')),['sum_pr2']].sum(),
+         "не сработал в", len(df.loc[df.sum_pr2.apply(lambda x: type(x)==type('s')),:]))
     return df[['Код','vst', 'list_sum', 'report_sum', 'sum_pr2']]
