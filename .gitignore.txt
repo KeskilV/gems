@@ -1,2 +1,5 @@
 .ipynb_checkpoints
 ipynb/.ipynb_checkpoints
+__pycache__
+ipynb/module_prgem/__pycache__
+ipynb/module_prgem/.ipynb_checkpoints
