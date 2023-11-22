@@ -77,7 +77,7 @@ def check_vstlist(l):
         dfx['prcost'] = dfx['CARAT']*dfx['price']
 
     except:
-        return '0;0;except; '+report
+        return 'имеется ошибка, или подозрение см report;см report;except; '+report
 
     return f"{dfx['prcost'].sum():.2f}; {((dfx['CARAT'].astype('str')+'+').sum()).strip('+')}; \
 price:{((dfx['price'].astype('str')+'+').sum()).strip('+')};\
