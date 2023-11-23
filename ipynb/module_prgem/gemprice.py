@@ -1,5 +1,5 @@
 def gemprice(df_orig, colname_vst):
-    '''функция расчета прейскурантной стоимости цветных камней'''
+    '''сборка(2023-11-23) функция расчета прейскурантной стоимости цветных камней. '''
     import numpy as np
     import pandas as pd
     import re
@@ -82,7 +82,16 @@ def gemprice(df_orig, colname_vst):
 
     #суммирование репортов всех ДК
     df['report_sum'] = df[['report_ruby20','report_sap20','report_em20' ]]\
-    .apply(lambda x: f"r:{x['report_ruby20']}; s:{x['report_sap20']}; e:{x['report_em20']}", axis=1)
-    print("сумма стоимости дк ", df.loc[df.sum_pr2.apply(lambda x: type(x)!=type('s')),['sum_pr2']].sum(),
+    .apply(lambda x: f"r({x['report_ruby20']}) s({x['report_sap20']}) e({x['report_em20']})", axis=1)
+    
+    iflen0 = lambda x: '' if len(x)==0 else x
+    df['report_pr'] = df[['Код', 'vst', 'count_price_ruby20','count_price_sap20',  'count_price_em20']]\
+    .apply(lambda x: f"r({iflen0(x['count_price_ruby20'])})\
+ s({iflen0(x['count_price_sap20'])})\
+ e({iflen0(x['count_price_em20'])})"\
+     , axis=1)[(df['sum_pr2']!=0)]
+    
+    print("сборка(2023-11-23)  - сумма стоимости дк ", df.loc[df.sum_pr2.apply(lambda x: type(x)!=type('s')),['sum_pr2']].sum(),
          "не сработал в", len(df.loc[df.sum_pr2.apply(lambda x: type(x)==type('s')),:]))
-    return df[['Код','vst', 'list_sum', 'report_sum', 'sum_pr2']]
+    return df[['Код','vst', 'list_sum', 'report_sum', 'sum_pr2','report_pr']]
+
