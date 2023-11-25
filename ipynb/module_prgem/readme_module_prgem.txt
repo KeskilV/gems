@@ -1,10 +1,26 @@
 Модуль для расчета прйскуранта ЦВ 
 
 код для функций:
+gemprice.py
+#вызов функции из модуля
+#import module_prgem.gemprice as gemprice
+#df_test = df0[['sv_Код','sv_Вставки']].copy(deep=True)
+#df_test.rename(columns={'sv_Код':'Код'}, inplace=True)
+#gemprice.gemprice(df_test, 'sv_Вставки')
+#ТО DO Код переименовать в code, смысла нет возвращать строки без ЦВДК 
+
+
+price_sap_ruby.py
 price_em.py
 
+
+
+
+
+
 словари:
-dictemeralds.py
+gemprice.py
+dictemeralds.py (устарел)
 
 таблицы размерностей:
 size_em_sto.xlsx
@@ -12,6 +28,7 @@ sizes_ruby_sap_sto.xlsx
 
 таблицы прейскурантов в виде бд:
 df_pr_emeralds_sto_173_20-04-2023.xlsx
+df_pr_sap_ruby_ 64_65_13-02-2020.xlsx
 
 папка для прейскурантов:
 прейскуранты обработка
